@@ -63,7 +63,6 @@ The tests generate every possible combination of template, style, length, platfo
 
 That's how I found most of my bugs. My favourite one: short 15-second ads were accidentally deleting the call-to-action scene, which makes the ad useless. I'd never have caught that by clicking around manually.
 
-I also built a fake AI server to test what happens when the real one fails — bad responses, timeouts, rate limits, an invalid key.
 
 Notes
 An earlier, much rougher version: AdTemplateAI
