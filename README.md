@@ -1,92 +1,71 @@
-# Director for HexCoded
+Ad Director
 
-**Live demo:** _add your Vercel URL here_
+Live demo: add your Vercel URL here
 
-A working prototype of three features I'd add to [HexCoded](https://hexcoded.ai):
+A tool I built that plans video ads for you. You describe your product in one sentence, and it works out what kind of ad to make, writes the script, and gives you a ready prompt for every shot.
 
-1. **A smarter template marketplace.** A one-line brief ranks 11 ad formats (37 styles) for the product, goal, platform and tone, and says *why* each one fits.
-2. **Director, an AI ad assistant.** It turns the brief into a shot-by-shot plan: five hooks, a timed script, a ready prompt and model pick for every shot and quality checks. You change anything by chatting ("make scene 2 funnier", "cut it to 15 seconds", "in Hinglish").
-3. **An instant help assistant.** It answers pricing, credits, plans and language questions from HexCoded's public pages, with a source link, and passes creative requests to Director.
+Then you can change anything just by chatting with it — "make scene 2 funnier", "cut it to 15 seconds", "in Hinglish".
 
-It uses a free AI tier (Groq), and it keeps working with no AI at all.
+What it does
 
----
+1. Picks the right ad format You type something like "sunscreen for college students, funny Reels, 20% off". It reads that and figures out the category, your goal, the platform and the tone — then ranks 11 ad formats and explains why each one fits.
 
-## Why these three
+2. Plans the whole ad You get 5 hook options, a scene-by-scene script with timings, a prompt for each shot, and which AI model to generate it with. It also checks your ad for common mistakes, like a hook that's too slow or a claim you'd need proof for.
 
-HexCoded already covers *generation*: 30+ models, 1,000+ actors, 70+ languages and four tools (Creative Studio, Talking actors, Make a custom video, URL → Ad). The hard part for a small brand comes before that: **deciding what ad to make and how to shoot it.**
+3. Answers questions There's a help chatbot in the corner for pricing and plan questions. It answers instantly and shows where the answer came from.
 
-- **LTX Studio** turns a script into a storyboard, but it's built for filmmakers, not performance ads.
-- **OpenArt and ImagineArt** offer large template libraries, but you browse them rather than get matched to one.
-- **Magnific** is excellent at making images better, not at planning an ad.
+Why I built it
 
-Director sits in that gap. Every plan ends in prompts that are ready to paste into HexCoded's own tools, so it leads straight to more renders. It also fits HexCoded's direction toward agentic chat and node workflows: each storyboard scene maps naturally to a node.
+I was looking at AI video tools like HexCoded, LTX Studio and OpenArt. They're all really good at generating video — but you still have to figure out what ad to make in the first place, which is the part I always found hardest.
 
-## Run it locally
+So I built the planning step. Every plan ends in prompts you can paste straight into a tool like HexCoded to actually generate the video.
 
-```bash
-npm start            # http://localhost:3000, Node 20+, no dependencies
-```
+Try it locally
+bash
+npm start
 
-To turn on AI, copy `.env.example` to `.env` and paste a free key from <https://console.groq.com/keys> (no card needed).
+Then open http://localhost:3000. You need Node 20 or newer. There's nothing to install — no dependencies.
 
-## Deploy to Vercel (free)
+To turn on the AI features, copy .env.example to .env and paste a free key from console.groq.com/keys (no card needed).
 
-1. Push this folder to a GitHub repo.
-2. On vercel.com, go to **Add New → Project**, import the repo, and keep the default settings.
-3. Under **Environment Variables**, add `GROQ_API_KEY`.
-4. Deploy. The badge in the top-right of the page should read **AI on**.
+The interesting part
 
-**Render or Railway** also work: use `npm start` as the start command and set the same variable.
+The AI isn't allowed to control the app.
 
-## How it works
+This was the main thing I wanted to get right. If you let an AI rewrite your whole data structure, one weird response breaks everything. So instead:
 
-```
-public/            static app (vanilla JS modules, no build step)
-  js/data.js         templates, styles, story beats, hook and line libraries, HexCoded facts, help knowledge base
-  js/recommender.js  brief parser + weighted, explainable scoring with diversity
-  js/director.js     storyboard engine, edit operations ("ops"), offline chat intents
-  js/support.js      BM25 retrieval over the knowledge base
-  js/app.js          UI
-api/chat.js        one serverless endpoint for both assistants
-api/_lib/llm.js    OpenAI-compatible client with model fallback
-server.mjs         zero-dependency local / Render server
-```
+The app calculates all the structure itself — scenes, timings, prompts, checks
+The AI only sends small edit instructions like "change scene 2's line to this"
+Every instruction gets checked before it's applied, and anything invalid is thrown away
 
-**The AI never owns the plan.** Structure, timing, and checks are computed in the browser. The AI only returns small, validated edit operations (`set_scene`, `set_hooks`, `set_meta`, `rebuild`, `remove_scene`).
+Which means the app works completely fine with no AI key at all. If the key is missing, the API is slow, or I hit a rate limit, it quietly falls back to its own built-in engine and tells you it did.
 
-That design has three consequences:
-- A bad or malicious model reply can't break the board.
-- Edits like length, platform and offer are instant and free.
-- If the key is missing, rate-limited, slow or invalid, the app quietly uses the built-in engine and says so.
+Also, edits like changing the length or platform don't call the AI at all — they're calculated locally, so they're instant.
 
-**The help bot answers confident questions locally in milliseconds.** It only calls the AI for questions it isn't sure about, and the AI is restricted to the knowledge base, so it can't invent prices.
+How it's built
 
-**Default models** are `openai/gpt-oss-20b`, then `openai/gpt-oss-120b`, then `llama-3.1-8b-instant`. Any OpenAI-compatible provider works through `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODELS`.
+Plain JavaScript, HTML and CSS, with zero libraries. One small Node.js backend function that keeps the API key secret.
 
-## Tests
+public/js/data.js         all the content — templates, script lines, hooks, FAQ
+public/js/recommender.js  reads your brief and ranks the templates
+public/js/director.js     builds and edits the ad plan
+public/js/support.js      the help bot's search
+public/js/app.js          the interface
+api/chat.js               the backend endpoint
 
-```bash
-npm test         # engine tests
-npm run test:ui  # browser tests (needs Python + Playwright)
-```
+I used Groq's free tier for the AI, with three models set up as fallbacks in case one is down.
 
-**Engine tests** cover all 5,656 combinations of template, style, length, platform and tone. They check that every plan:
-- has no `undefined`, `NaN` or unfilled placeholders,
-- has contiguous timing,
-- has five unique hooks,
-- always keeps a call to action,
-- passes its own hook-length and line-length checks.
+Testing
+bash
+npm test
 
-They also check that malicious or garbage model output is rejected.
+The tests generate every possible combination of template, style, length, platform and tone — 5,656 different ad plans — and check that none of them break.
 
-**Browser tests** exercise every button, export, chat edit and the help widget, plus mobile layout.
+That's how I found most of my bugs. My favourite one: short 15-second ads were accidentally deleting the call-to-action scene, which makes the ad useless. I'd never have caught that by clicking around manually.
 
-The AI path is tested against a fake provider (`tests/fake-llm.mjs`) in five situations: normal replies, malicious output, unreadable output, rate limits, slow responses and a bad key.
+I also built a fake AI server to test what happens when the real one fails — bad responses, timeouts, rate limits, an invalid key.
 
-## Notes
+Notes
+An earlier, much rougher version: AdTemplateAI
 
-- **Where the HexCoded facts come from:** plans, credits, tools, models and languages were taken from hexcoded.ai and hexcoded.ai/pricing in September 2026.
-- **Credit estimates are rough.** HexCoded shows the exact cost before rendering.
-- **Everything here is original.** The prototype contains no HexCoded-generated media.
-- **Earlier version:** [AdTemplateAI](https://github.com/vanshikabhagatt/AdTemplateAI).
+Built by Vanshika Bhagat.
