@@ -1,6 +1,6 @@
 Ad Director
 
-Live demo: add your Vercel URL here
+Live demo:(https://ad-director.vercel.app/)
 
 A tool I built that plans video ads for you. You describe your product in one sentence, and it works out what kind of ad to make, writes the script, and gives you a ready prompt for every shot.
 
