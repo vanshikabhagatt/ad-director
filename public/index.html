@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Director for HexCoded — plan video ads by chatting</title>
+  <meta name="description" content="Prototype: a template marketplace, an AI ad director and a help assistant for HexCoded.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 28 9v14L16 30 4 23V9z' fill='%232F4BFF'/><rect x='12' y='9' width='8' height='14' rx='1.5' fill='%23FFD23F'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <a class="brand" href="#/" aria-label="Director home">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M16 2 28 9v14L16 30 4 23V9z" fill="var(--cobalt)"/><rect x="12" y="9" width="8" height="14" rx="1.5" fill="var(--marker)"/></svg>
+      <span class="brand-name">Director</span>
+      <span class="brand-for">for HexCoded</span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#/" data-route="brief">Brief</a>
+      <a href="#/templates" data-route="templates">Templates</a>
+      <a href="#/director" data-route="director">Director</a>
+    </nav>
+    <span class="ai-status" id="ai-status" title="Which engine is answering">Checking AI…</span>
+  </header>
+
+  <main id="main">
+    <!-- BRIEF -->
+    <section class="view" id="view-brief" data-view="brief">
+      <div class="brief-layout">
+        <div class="brief-intro">
+          <h1>Describe the product. Get a shot-by-shot ad plan.</h1>
+          <p class="lede">Director picks the right format for your brief, writes hooks and a timed script, and gives you a ready prompt for every shot in HexCoded. Then you change anything by chatting.</p>
+          <ol class="how">
+            <li><strong>Brief</strong> A sentence is enough.</li>
+            <li><strong>Template</strong> Ranked for your product, goal and platform, with reasons.</li>
+            <li><strong>Plan</strong> Hooks, scenes, shot prompts, model picks and quality checks.</li>
+          </ol>
+        </div>
+
+        <form class="brief-card" id="brief-form" autocomplete="off">
+          <label class="field">
+            <span>Product name</span>
+            <input name="product" id="f-product" maxlength="60" placeholder="SunDrop SPF 50">
+          </label>
+          <label class="field">
+            <span>What is it, and who is it for?</span>
+            <textarea name="description" id="f-desc" rows="3" maxlength="600" placeholder="A light sunscreen for college students that doesn't leave a white cast. Funny Reels for a Diwali sale, 20% off."></textarea>
+          </label>
+          <div class="examples" id="examples" aria-label="Example briefs"></div>
+          <div class="field-row">
+            <label class="field small"><span>Platform</span>
+              <select name="platform" id="f-platform"></select></label>
+            <label class="field small"><span>Goal</span>
+              <select name="objective" id="f-objective"></select></label>
+            <label class="field small"><span>Tone</span>
+              <select name="tone" id="f-tone"></select></label>
+            <label class="field small"><span>Length</span>
+              <select name="duration" id="f-duration">
+                <option value="auto">Auto</option><option value="15">15 s</option><option value="30">30 s</option><option value="45">45 s</option><option value="60">60 s</option>
+              </select></label>
+          </div>
+          <p class="hint">Leave these on Auto and Director reads them from your description.</p>
+          <div class="actions">
+            <button class="btn primary" type="submit">Find templates</button>
+            <button class="btn ghost" type="button" id="plan-best">Plan with the best match</button>
+          </div>
+        </form>
+      </div>
+      <div id="brief-results" class="results" aria-live="polite"></div>
+    </section>
+
+    <!-- TEMPLATES -->
+    <section class="view" id="view-templates" data-view="templates" hidden>
+      <div class="tpl-head">
+        <div>
+          <h1>Templates</h1>
+          <p class="lede" id="tpl-sub">Every format HexCoded users make, each with variations for different tones.</p>
+        </div>
+        <div class="tpl-tools">
+          <label class="search"><span class="sr-only">Search templates</span>
+            <input type="search" id="tpl-search" placeholder="Search: unboxing, funny, jewellery…"></label>
+          <div class="filters" id="tpl-filters" role="group" aria-label="Filter by family"></div>
+        </div>
+      </div>
+      <div class="tpl-grid" id="tpl-grid"></div>
+    </section>
+
+    <!-- DIRECTOR -->
+    <section class="view" id="view-director" data-view="director" hidden>
+      <div class="director">
+        <aside class="chat" aria-label="Director chat">
+          <div class="chat-head">
+            <h2>Director</h2>
+            <button class="link-btn" id="dir-reset" type="button">New plan</button>
+          </div>
+          <div class="chat-log" id="dir-log" role="log" aria-live="polite"></div>
+          <div class="chips" id="dir-suggest" aria-label="Suggestions"></div>
+          <form class="composer" id="dir-form">
+            <label class="sr-only" for="dir-input">Message Director</label>
+            <textarea id="dir-input" rows="2" maxlength="1000" placeholder="Describe your product, or say “make scene 2 funnier”"></textarea>
+            <button class="btn primary send" type="submit" aria-label="Send">Send</button>
+          </form>
+        </aside>
+        <div class="board" id="board" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Template detail -->
+  <dialog id="tpl-dialog" aria-labelledby="tpl-dialog-title"></dialog>
+
+  <!-- Help widget -->
+  <button class="help-fab" id="help-fab" type="button" aria-expanded="false" aria-controls="help-panel">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span>Help</span>
+  </button>
+  <section class="help-panel" id="help-panel" hidden aria-label="HexCoded help">
+    <header class="help-head">
+      <div>
+        <h2>HexCoded help</h2>
+        <p>Plans, credits, actors and tools. Instant answers.</p>
+      </div>
+      <button class="icon-btn" id="help-close" type="button" aria-label="Close help">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <div class="help-log" id="help-log" role="log" aria-live="polite"></div>
+    <div class="chips" id="help-suggest"></div>
+    <form class="composer" id="help-form">
+      <label class="sr-only" for="help-input">Ask a question</label>
+      <input id="help-input" maxlength="500" placeholder="Ask about pricing, credits, languages…">
+      <button class="btn primary send" type="submit">Ask</button>
+    </form>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

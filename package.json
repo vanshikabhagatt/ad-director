@@ -1,0 +1,16 @@
+{
+  "name": "ad-director",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Director for HexCoded: template marketplace, AI ad assistant and help chatbot (prototype).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:ui": "python3 tests/ui.check.py && python3 tests/ui.ai.check.py"
+  }
+}
